@@ -24,13 +24,16 @@ def download_nlp_resources():
 download_nlp_resources()
 
 # ---------------------------------------------------------------------------
-# The vectorizer was saved with this function as its analyzer.
-# It MUST be defined in __main__ so joblib can resolve the reference.
+# Text pre-processing function used by the CountVectorizer.
+# The name 'ekkok' MUST stay unchanged: vectorizer.joblib was serialised with
+# a hard-coded reference to '__main__.ekkok', so joblib cannot deserialise it
+# unless this exact name is present in __main__ at load time.
 # ---------------------------------------------------------------------------
 _stop_words = set(stopwords.words("english"))
 
 
 def ekkok(text):
+    """Lemmatise words and remove English stop-words (analyzer for CountVectorizer)."""
     words = TextBlob(text).words
     return [word.lemmatize() for word in words if word.lower() not in _stop_words]
 
