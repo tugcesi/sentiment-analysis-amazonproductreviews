@@ -8,6 +8,7 @@ import seaborn as sns
 import nltk
 from nltk.corpus import stopwords
 from textblob import TextBlob
+import re
 
 matplotlib.use("Agg")
 
@@ -20,7 +21,6 @@ def download_nlp_resources():
     nltk.download("punkt_tab", quiet=True)
     nltk.download("averaged_perceptron_tagger_eng", quiet=True)
 
-
 download_nlp_resources()
 
 # ---------------------------------------------------------------------------
@@ -31,12 +31,24 @@ download_nlp_resources()
 # ---------------------------------------------------------------------------
 _stop_words = set(stopwords.words("english"))
 
-
 def ekkok(text):
     """Lemmatise words and remove English stop-words (analyzer for CountVectorizer)."""
     words = TextBlob(text).words
     return [word.lemmatize() for word in words if word.lower() not in _stop_words]
 
+def preprocess_text(text):
+    """Apply same preprocessing as training notebook"""
+    # Küçük harfe çevir
+    text = text.lower()
+    # Noktalama işaretlerini kaldır
+    text = re.sub(r'[^
+\w\s]', '', text)
+    # Rakamları kaldır
+    text = re.sub(r'\d+', '', text)
+    # Satır sonlarını kaldır
+    text = text.replace('\n', ' ')
+    text = text.replace('\r', ' ')
+    return text
 
 # ---------------------------------------------------------------------------
 # Model loading (cached so it only runs once)
@@ -47,7 +59,6 @@ def load_model():
     vectorizer = joblib.load("vectorizer.joblib")
     return model, vectorizer
 
-
 # ---------------------------------------------------------------------------
 # Prediction helper
 # ---------------------------------------------------------------------------
@@ -55,13 +66,13 @@ LABEL_MAP = {0: "Negatif 🔴", 1: "Nötr 🟡", 2: "Pozitif 🟢"}
 COLOR_MAP = {0: "#FF4B4B", 1: "#FFA500", 2: "#21C354"}
 EMOJI_MAP = {0: "😞", 1: "😐", 2: "😊"}
 
-
 def predict(text: str, model, vectorizer):
-    X = vectorizer.transform([text])
+    # Preprocess text before vectorization
+    processed_text = preprocess_text(text)
+    X = vectorizer.transform([processed_text])
     label = int(model.predict(X)[0])
     proba = model.predict_proba(X)[0]
     return label, proba
-
 
 # ---------------------------------------------------------------------------
 # Page config
@@ -155,7 +166,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-tab_single, tab_batch = st.tabs(["✏️ Tek Yorum Analizi", "📂 Toplu Analiz (CSV)"])
+tab_single, tab_batch = st.tabs(["✏️ Tek Yorum Analizi", "📂 Toplu Analiz (CSV)"]) 
 
 # ---------------------------------------------------------------------------
 # Tab 1 – Single review
@@ -196,9 +207,9 @@ with tab_single:
             emoji = EMOJI_MAP[label]
 
             st.markdown(
-                f'<div class="result-box" style="background-color:{color}22; border: 2px solid {color}; color:{color};">'
-                f"{emoji} Tahmin: <strong>{result_label}</strong>"
-                f"</div>",
+                f'<div class="result-box" style="background-color: {color}22; border: 2px solid {color}; color: {color};">'
+                f'{emoji} Tahmin: <strong>{result_label}</strong>'
+                f'</div>',
                 unsafe_allow_html=True,
             )
 
@@ -242,7 +253,7 @@ with tab_batch:
         """
     )
 
-    uploaded_file = st.file_uploader("CSV dosyasını sürükle & bırak ya da seç:", type=["csv"])
+    uploaded_file = st.file_uploader("CSV dosyasını sürükle & bırak ya da seç:", type=["csv"]) 
 
     if uploaded_file is not None:
         try:
@@ -254,12 +265,13 @@ with tab_batch:
         if "reviewText" not in df.columns:
             st.error("CSV dosyasında `reviewText` sütunu bulunamadı.")
         else:
-            df["reviewText"] = df["reviewText"].fillna("").astype(str)
+            df["reviewText"] = df["reviewText"].fillna(".").astype(str)
             st.success(f"✅ {len(df):,} yorum yüklendi.")
-
             with st.spinner("Toplu analiz yapılıyor…"):
                 model, vectorizer = load_model()
-                X = vectorizer.transform(df["reviewText"].tolist())
+                # Preprocess all texts before vectorization
+                processed_texts = [preprocess_text(text) for text in df["reviewText"].tolist()]
+                X = vectorizer.transform(processed_texts)
                 labels = model.predict(X)
                 proba_matrix = model.predict_proba(X)
 
