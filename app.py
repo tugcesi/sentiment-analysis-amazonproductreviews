@@ -38,13 +38,9 @@ def ekkok(text):
 
 def preprocess_text(text):
     """Apply same preprocessing as training notebook"""
-    # Küçük harfe çevir
     text = text.lower()
-    # Noktalama işaretlerini kaldır
-    text = re.sub(r'[^\w\s]', '', text)
-    # Rakamları kaldır
+    text = re.sub(r'[^\\w\s]', '', text)
     text = re.sub(r'\d+', '', text)
-    # Satır sonlarını kaldır
     text = text.replace('\n', ' ')
     text = text.replace('\r', ' ')
     return text
@@ -66,7 +62,6 @@ COLOR_MAP = {0: "#FF4B4B", 1: "#FFA500", 2: "#21C354"}
 EMOJI_MAP = {0: "😞", 1: "😐", 2: "😊"}
 
 def predict(text: str, model, vectorizer):
-    # Preprocess text before vectorization
     processed_text = preprocess_text(text)
     X = vectorizer.transform([processed_text])
     label = int(model.predict(X)[0])
@@ -123,11 +118,12 @@ st.markdown(
 )
 
 # ---------------------------------------------------------------------------
-# Sidebar
+# Sidebar – cloud.png removed; emoji + markdown used instead
 # ---------------------------------------------------------------------------
 with st.sidebar:
-    st.image("cloud.png", use_container_width=True)
-    st.markdown("## 🛍️ Hakkında")
+    st.markdown("# 🛍️ Amazon Yorum Analizi")
+    st.markdown("---")
+    st.markdown("## ℹ️ Hakkında")
     st.markdown(
         """
         Bu uygulama **Amazon ürün yorumlarını** makine öğrenmesi kullanarak
@@ -176,7 +172,7 @@ with tab_single:
     example_reviews = {
         "Örnek seç…": "",
         "Çok beğendim 😊": "This product is absolutely amazing! Works perfectly and fast delivery. Highly recommended!",
-        "Fena değil 😐": "The product is okay, nothing special. Does what it's supposed to do.",
+        "Fena değil 😐": "The product is okay, nothing special. Does what it\'s supposed to do.",
         "Hayal kırıklığı 😞": "Terrible quality, broke after two days. Waste of money. Very disappointed.",
     }
     choice = st.selectbox("Hızlı örnek:", list(example_reviews.keys()))
@@ -206,9 +202,7 @@ with tab_single:
             emoji = EMOJI_MAP[label]
 
             st.markdown(
-                f'<div class="result-box" style="background-color: {color}22; border: 2px solid {color}; color: {color};">'
-                f'{emoji} Tahmin: <strong>{result_label}</strong>'
-                f'</div>',
+                f'<div class="result-box" style="background-color: {{color}}22; border: 2px solid {{color}}; color: {{color}};">\n                {{emoji}} Tahmin: <strong>{{result_label}}</strong>\n                </div>',
                 unsafe_allow_html=True,
             )
 
@@ -231,7 +225,7 @@ with tab_single:
                 ax.text(
                     min(val + 0.02, 0.95),
                     bar.get_y() + bar.get_height() / 2,
-                    f"{val:.1%}",
+                    f"{{val:.1%}}",
                     va="center",
                     fontweight="bold",
                 )
@@ -258,18 +252,17 @@ with tab_batch:
         try:
             df = pd.read_csv(uploaded_file)
         except Exception as e:
-            st.error(f"Dosya okunamadı: {e}")
+            st.error(f"Dosya okunamadı: {{e}}")
             st.stop()
 
         if "reviewText" not in df.columns:
             st.error("CSV dosyasında `reviewText` sütunu bulunamadı.")
         else:
             df["reviewText"] = df["reviewText"].fillna("").astype(str)
-            st.success(f"✅ {len(df):,} yorum yüklendi.")
+            st.success(f"✅ {{len(df):,}} yorum yüklendi.")
 
             with st.spinner("Toplu analiz yapılıyor…"):
                 model, vectorizer = load_model()
-                # Preprocess all texts before vectorization
                 processed_texts = [preprocess_text(text) for text in df["reviewText"].tolist()]
                 X = vectorizer.transform(processed_texts)
                 labels = model.predict(X)
@@ -281,15 +274,13 @@ with tab_batch:
             df["Nötr Olasılığı"] = proba_matrix[:, 1].round(3)
             df["Pozitif Olasılığı"] = proba_matrix[:, 2].round(3)
 
-            # Summary metrics
             counts = pd.Series(labels).value_counts().sort_index()
             total = len(labels)
             col1, col2, col3 = st.columns(3)
-            col1.metric("🔴 Negatif", f"{counts.get(0, 0):,}", f"{counts.get(0, 0)/total:.1%}")
-            col2.metric("🟡 Nötr", f"{counts.get(1, 0):,}", f"{counts.get(1, 0)/total:.1%}")
-            col3.metric("🟢 Pozitif", f"{counts.get(2, 0):,}", f"{counts.get(2, 0)/total:.1%}")
+            col1.metric("🔴 Negatif", f"{{counts.get(0, 0):,}}", f"{{counts.get(0, 0)/total:.1%}}")
+            col2.metric("🟡 Nötr", f"{{counts.get(1, 0):,}}", f"{{counts.get(1, 0)/total:.1%}}")
+            col3.metric("🟢 Pozitif", f"{{counts.get(2, 0):,}}", f"{{counts.get(2, 0)/total:.1%}}")
 
-            # Pie chart
             fig2, ax2 = plt.subplots(figsize=(5, 4))
             labels_pie = ["Negatif", "Nötr", "Pozitif"]
             sizes = [counts.get(i, 0) for i in range(3)]
@@ -309,13 +300,11 @@ with tab_batch:
             st.pyplot(fig2)
             plt.close(fig2)
 
-            # Data table preview
             st.markdown("#### 📋 Sonuç Tablosu (ilk 50 satır)")
             display_cols = ["reviewText", "Duygu", "Negatif Olasılığı", "Nötr Olasılığı", "Pozitif Olasılığı"]
             existing_cols = [c for c in display_cols if c in df.columns]
             st.dataframe(df[existing_cols].head(50), use_container_width=True)
 
-            # Download button
             csv_out = df.to_csv(index=False).encode("utf-8")
             st.download_button(
                 label="⬇️ Sonuçları İndir (CSV)",
