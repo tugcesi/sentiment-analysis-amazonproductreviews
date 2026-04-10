@@ -41,8 +41,7 @@ def preprocess_text(text):
     # Küçük harfe çevir
     text = text.lower()
     # Noktalama işaretlerini kaldır
-    text = re.sub(r'[^
-\w\s]', '', text)
+    text = re.sub(r'[^\w\s]', '', text)
     # Rakamları kaldır
     text = re.sub(r'\d+', '', text)
     # Satır sonlarını kaldır
@@ -166,7 +165,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-tab_single, tab_batch = st.tabs(["✏️ Tek Yorum Analizi", "📂 Toplu Analiz (CSV)"]) 
+tab_single, tab_batch = st.tabs(["✏️ Tek Yorum Analizi", "📂 Toplu Analiz (CSV)"])
 
 # ---------------------------------------------------------------------------
 # Tab 1 – Single review
@@ -253,7 +252,7 @@ with tab_batch:
         """
     )
 
-    uploaded_file = st.file_uploader("CSV dosyasını sürükle & bırak ya da seç:", type=["csv"]) 
+    uploaded_file = st.file_uploader("CSV dosyasını sürükle & bırak ya da seç:", type=["csv"])
 
     if uploaded_file is not None:
         try:
@@ -265,8 +264,9 @@ with tab_batch:
         if "reviewText" not in df.columns:
             st.error("CSV dosyasında `reviewText` sütunu bulunamadı.")
         else:
-            df["reviewText"] = df["reviewText"].fillna(".").astype(str)
+            df["reviewText"] = df["reviewText"].fillna("").astype(str)
             st.success(f"✅ {len(df):,} yorum yüklendi.")
+
             with st.spinner("Toplu analiz yapılıyor…"):
                 model, vectorizer = load_model()
                 # Preprocess all texts before vectorization
