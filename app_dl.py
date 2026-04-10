@@ -79,7 +79,7 @@ def load_assets():
     return model, tfidf
 
 # ---------------------------------------------------------------------------
-# Label / colour / emoji maps (same as app.py)
+# Label / colour / emoji maps
 # ---------------------------------------------------------------------------
 LABEL_MAP = {0: "Negatif 🔴", 1: "Nötr 🟡", 2: "Pozitif 🟢"}
 COLOR_MAP = {0: "#FF4B4B",   1: "#FFA500",  2: "#21C354"}
@@ -106,7 +106,7 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------------------------
-# Custom CSS (same style as app.py)
+# Custom CSS
 # ---------------------------------------------------------------------------
 st.markdown(
     """
@@ -145,11 +145,12 @@ st.markdown(
 )
 
 # ---------------------------------------------------------------------------
-# Sidebar
+# Sidebar – cloud.png removed; emoji + markdown used instead
 # ---------------------------------------------------------------------------
 with st.sidebar:
-    st.image("cloud.png", use_container_width=True)
-    st.markdown("## 🛍️ Hakkında")
+    st.markdown("# 🛍️ Amazon Duygu Analizi")
+    st.markdown("---")
+    st.markdown("## ℹ️ Hakkında")
     st.markdown(
         """
         Bu uygulama **Amazon ürün yorumlarını** derin öğrenme kullanarak
@@ -159,22 +160,22 @@ with st.sidebar:
         - 🟡 **Nötr** (3 yıldız)
         - 🟢 **Pozitif** (4–5 yıldız)
 
-        **Model:** Deep Learning (Keras Sequential)
-        **Vektörleştirici:** TF-IDF
-        **Dil:** İngilizce
+        **Model:** Deep Learning (Keras Sequential)  
+        **Vektörleştirici:** TF-IDF  
+        **Dil:** İngilizce  
         """
     )
     st.divider()
     st.markdown("### 📊 Nasıl Kullanılır?")
     st.markdown(
         """
-        1. **Tek Yorum** sekmesine geç
-        2. Bir Amazon yorumu yaz
-        3. **Analiz Et** düğmesine bas
-        — veya —
-        1. **Toplu Analiz** sekmesine geç
-        2. CSV dosyasını yükle
-        3. Sonuçları incele & indir
+        1. **Tek Yorum** sekmesine geç  
+        2. Bir Amazon yorumu yaz  
+        3. **Analiz Et** düğmesine bas  
+        — veya —  
+        1. **Toplu Analiz** sekmesine geç  
+        2. CSV dosyasını yükle  
+        3. Sonuçları ince & indir  
         """
     )
 
@@ -188,7 +189,7 @@ st.markdown(
 )
 
 # Load model & vectorizer (shown once at startup)
-with st.spinner("Model yükleniyor, lütfen bekleyin…"): 
+with st.spinner("Model yükleniyor, lütfen bekleyin…"):
     model, tfidf = load_assets()
 
 tab_single, tab_batch = st.tabs(["✏️ Tek Yorum Analizi", "📂 Toplu Analiz (CSV)"])
@@ -272,7 +273,7 @@ with tab_batch:
     st.markdown('<p class="section-header">CSV Dosyası Yükle</p>', unsafe_allow_html=True)
     st.markdown(
         """
-        CSV dosyanızda en az bir **`reviewText`** sütunu bulunmalıdır.
+        CSV dosyanızda en az bir **`reviewText`** sütunu bulunmalıdır.  
         Başka sütunlar varsa aynen korunur.
         """
     )
@@ -289,7 +290,7 @@ with tab_batch:
         if "reviewText" not in df_upload.columns:
             st.error("CSV dosyasında `reviewText` sütunu bulunamadı.")
         else:
-            df_upload["reviewText"] = df_upload["reviewText"].fillna(""").astype(str)
+            df_upload["reviewText"] = df_upload["reviewText"].fillna("{}").astype(str)
             st.success(f"✅ {len(df_upload):,} yorum yüklendi.")
 
             with st.spinner("Toplu analiz yapılıyor…"):
