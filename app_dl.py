@@ -10,26 +10,12 @@ matplotlib.use("Agg")
 # ---------------------------------------------------------------------------
 # TensorFlow / Keras
 # ---------------------------------------------------------------------------
-import tensorflow as tf
 from tensorflow.keras.models import load_model
 
 # ---------------------------------------------------------------------------
 # Sklearn – TF-IDF (refitted on training data, same as notebook)
 # ---------------------------------------------------------------------------
 from sklearn.feature_extraction.text import TfidfVectorizer
-import nltk
-from nltk.corpus import stopwords
-
-# ---------------------------------------------------------------------------
-# NLTK resource downloads (silent, first-run only)
-# ---------------------------------------------------------------------------
-@st.cache_resource(show_spinner=False)
-def download_nlp_resources():
-    nltk.download("stopwords", quiet=True)
-
-download_nlp_resources()
-
-_stop_words = set(stopwords.words("english"))
 
 # ---------------------------------------------------------------------------
 # Preprocessing – exactly the same steps as the training notebook
@@ -207,7 +193,7 @@ with tab_single:
         placeholder="Type your Amazon product review here…",
     )
 
-    col_btn, col_clear = st.columns([1, 5])
+    col_btn, _ = st.columns([1, 5])
     with col_btn:
         analyze_btn = st.button("🔍 Analiz Et", type="primary", use_container_width=True)
 
